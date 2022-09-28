@@ -25,32 +25,14 @@ function drawSprite(img, sX, sY, sW, sH, dX, dY, dW, dH) {
   ctx.drawImage(img, sX, sY, sW, sH, dX, dY, dW, dH);
 }
 
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-  drawSprite(
-    playerSprite,
-    player.width * player.frameX,
-    player.height * player.frameY,
-    player.width,
-    player.height,
-    player.x,
-    player.y,
-    player.width,
-    player.height
-  );
-  requestAnimationFrame(animate);
-}
-animate();
-
 window.addEventListener("keydown", function (e) {
   keys[e.key] = true;
-  movePLayer();
-  console.log(e.key);
+  player.moving = true;
 });
 
 window.addEventListener("keyup", function (e) {
   delete keys[e.key];
+  player.moving = false;
 });
 
 function movePLayer() {
@@ -58,8 +40,61 @@ function movePLayer() {
   if (keys["w"] && player.y > 100) {
     player.y -= player.speed;
     player.frameY = 3;
-  } else if (keys["s"] && player.y) {
+    player.moving = true;
+  }
+  if (keys["a"] && player.x > 0) {
+    player.x -= player.speed;
+    player.frameY = 1;
+    player.moving = true;
+  }
+  if (keys["s"] && player.y < canvas.height - player.height) {
     player.y += player.speed;
-    player.frameY = 3;
+    player.frameY = 0;
+    player.moving = true;
+  }
+  if (keys["d"] && player.x < canvas.width - player.width) {
+    player.x += player.speed;
+    player.frameY = 2;
+    player.moving = true;
   }
 }
+
+function HandlePlayerFrame() {
+  if (player.frameX < 3 && player.moving) player.frameX++;
+  else player.frameX = 0;
+}
+
+let fps, fpsInterval, starTime, now, then, elapsed;
+
+function startAnimating(fps) {
+  fpsInterval = 1000 / fps; // calculate milliseconds
+  then = Date.now();
+  startTime = then;
+  animate();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  now = Date.now();
+  elapsed = now - then;
+  if (elapsed > fpsInterval) {
+    then = now - (elapsed % fpsInterval);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+    drawSprite(
+      playerSprite,
+      player.width * player.frameX,
+      player.height * player.frameY,
+      player.width,
+      player.height,
+      player.x,
+      player.y,
+      player.width,
+      player.height
+    );
+    movePLayer();
+    HandlePlayerFrame();
+  }
+}
+startAnimating(10);
